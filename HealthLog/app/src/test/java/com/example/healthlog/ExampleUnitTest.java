@@ -1,4 +1,4 @@
-package com.example.healthlogh;
+package com.example.healthlog;
 
 import org.junit.Test;
 

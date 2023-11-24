@@ -1,4 +1,4 @@
-package com.example.healthlogh;
+package com.example.healthlog;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;

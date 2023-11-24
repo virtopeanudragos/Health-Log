@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.healthlogh"
+    namespace = "com.example.healthlog"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.healthlogh"
+        applicationId = "com.example.healthlog"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
