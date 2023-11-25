@@ -1,5 +1,7 @@
 package com.example.healthlog;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.OnBackPressedDispatcher;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -8,36 +10,38 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
+    // Member variables for UI components
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
+    private Toolbar toolbar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize and setup UI components
+        initializeToolbarAndDrawer();
+        setupNavigationView();
+        setupBottomNavigationBar();
+        loadDefaultFragment();
+        setupBackPressHandler();
+    }
 
-        // Load the default fragment
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new HomeFragment())
-                .commit();
-
-
-
-        // Initialize DrawerLayout and NavigationView
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.top_nav_view);
-
-        // Setup the Toolbar
-        Toolbar toolbar = findViewById(R.id.top_app_bar);
+    private void initializeToolbarAndDrawer() {
+        // Initialize the Toolbar
+        toolbar = findViewById(R.id.top_app_bar);
         setSupportActionBar(toolbar);
 
-        // Setup Drawer Toggle
+        // Setup Drawer Layout with the toolbar
+        drawerLayout = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar,
                 R.string.navigation_drawer_open,
@@ -45,61 +49,85 @@ public class MainActivity extends AppCompatActivity {
         );
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
-        // Setup Drawer Navigation Item Click Listener
-        navigationView.setNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.nav_home) {
-                // Handle the home action
-            } else if (id == R.id.nav_profile) {
-                // Handle the profile action
-            }
-
-            // Close drawer after item is selected
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
-        });
-
-
-
-        //BottomNavigationBar
-        BottomNavigationView navView = findViewById(R.id.nav_view);
-
-        navView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-
-            int id = item.getItemId();
-            if (id == R.id.navigation_home) {
-                selectedFragment = new HomeFragment();
-            } else if (id == R.id.navigation_workout) {
-                selectedFragment = new WorkoutFragment();
-            } else if (id == R.id.navigation_food) {
-                selectedFragment = new FoodFragment();
-            } else if (id == R.id.navigation_progress) {
-                selectedFragment = new ProgressFragment();
-            }
-
-            if (selectedFragment != null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, selectedFragment)
-                        .commit();
-            }
-
-            return true;
-        });
-
     }
 
 
 
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
+    private void setupNavigationView() {
+        navigationView = findViewById(R.id.top_nav_view);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            handleNavigationDrawerItemSelected(item);
+            return true;
+        });
+    }
+
+    private void setupBottomNavigationBar() {
+        BottomNavigationView navView = findViewById(R.id.nav_view);
+        navView.setOnItemSelectedListener(item -> {
+            handleBottomNavigationItemSelected(item);
+            return true;
+        });
+    }
+
+    private void loadDefaultFragment() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new HomeFragment())
+                .commit();
+    }
+
+
+
+    private void handleNavigationDrawerItemSelected(MenuItem item) {
+        // Determine which item was selected
+        int id = item.getItemId();
+
+        // Load corresponding fragment or perform other actions
+        if (id == R.id.nav_home) {
+            // Load home fragment
+        } else if (id == R.id.nav_profile) {
+            // Load profile fragment
         }
+        // Add more conditions for other menu items
+
+        // Close the navigation drawer
+        drawerLayout.closeDrawer(GravityCompat.START);
+    }
+
+    private void handleBottomNavigationItemSelected(MenuItem item) {
+        Fragment selectedFragment = null;
+
+        int id = item.getItemId();
+        if (id == R.id.navigation_home) {
+            selectedFragment = new HomeFragment();
+        } else if (id == R.id.navigation_workout) {
+            selectedFragment = new WorkoutFragment();
+        } else if (id == R.id.navigation_food) {
+            selectedFragment = new FoodFragment();
+        } else if (id == R.id.navigation_progress) {
+            selectedFragment = new ProgressFragment();
+        }
+
+        if (selectedFragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, selectedFragment)
+                    .commit();
+        }
+    }
+
+
+
+    private void setupBackPressHandler() {
+        OnBackPressedDispatcher dispatcher = getOnBackPressedDispatcher();
+        dispatcher.addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    finish();
+                }
+            }
+        });
     }
 
 
