@@ -9,11 +9,18 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
     // Member variables for UI components
@@ -26,6 +33,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        //database
+        try {
+            copyDatabase(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle the error
+        }
 
         // Initialize and setup UI components
         initializeToolbarAndDrawer();
@@ -130,5 +146,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    private void copyDatabase(Context context) throws IOException {
+        File dbFile = context.getDatabasePath("workoutRoutines.db");
+        if (!dbFile.exists()) {
+            InputStream is = context.getAssets().open("workoutRoutines.db");
+            OutputStream os = new FileOutputStream(dbFile);
+
+            byte[] buffer = new byte[1024];
+            while (is.read(buffer) > 0) {
+                os.write(buffer);
+            }
+
+            os.flush();
+            os.close();
+            is.close();
+        }
+    }
 
 }

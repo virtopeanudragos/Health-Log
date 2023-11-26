@@ -12,44 +12,50 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 
+/**
+ * Fragment for displaying workout routines.
+ * It allows users to switch between custom and explore workout views.
+ */
 public class WorkoutFragment extends Fragment {
 
-    // UI elements
+    // UI components
     private Button btnCustom;
     private Button btnExplore;
     private FrameLayout contentFrame;
 
-
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_workout, container, false);
 
-        // Initialize UI components
+        // Initialize and setup UI components
         initializeViews(view);
-        // Set up button click listeners
         setupButtonListeners();
+
+        // Display custom workout content by default
+        displayCustomContent();
 
         return view;
     }
 
     /**
-     * Initializes views by binding them to their respective UI elements.
+     * Initializes views by binding them to their respective UI elements in the layout.
+     * @param view The inflated view of this fragment.
      */
     private void initializeViews(View view) {
         btnCustom = view.findViewById(R.id.btnCustom);
@@ -58,100 +64,90 @@ public class WorkoutFragment extends Fragment {
     }
 
     /**
-     * Sets up click listeners for buttons.
+     * Sets up click listeners for the buttons in the fragment.
      */
     private void setupButtonListeners() {
-        // Display custom content when the 'CUSTOM' button is clicked
+        // Set onClickListener for custom workout button
         btnCustom.setOnClickListener(v -> displayCustomContent());
-        // Display explore content when the 'EXPLORE' button is clicked
+        // Set onClickListener for explore workout button
         btnExplore.setOnClickListener(v -> displayExploreContent());
     }
 
     /**
-     * Logic to display custom content.
+     * Displays the custom workout content.
+     * TODO: Implement the logic to display custom content.
      */
     private void displayCustomContent() {
-        // TODO: Implement the logic to display custom content
+        // Inflate and display the custom layout
+        View customView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_workout_custom, null);
+        contentFrame.removeAllViews();
+        contentFrame.addView(customView);
+        setupCustomRecyclerView(customView);
+
+        // Floating action button for adding new custom workouts
+        FloatingActionButton fabAddWorkout = customView.findViewById(R.id.fabAddWorkout);
+        fabAddWorkout.setOnClickListener(v -> openCustomWorkoutDialog());
     }
+
+
+    private void openCustomWorkoutDialog() {
+        CustomWorkoutDialogFragment dialog = new CustomWorkoutDialogFragment();
+        dialog.setOnWorkoutSavedListener(() -> {
+            // Refresh the custom workouts list
+            displayCustomContent(); // Call this method again to refresh the custom workouts
+        });
+        dialog.show(getParentFragmentManager(), "CustomWorkoutDialog");
+    }
+
+
+    private void setupCustomRecyclerView(View customView) {
+        RecyclerView recyclerView = customView.findViewById(R.id.rvWorkoutCustom);
+
+        // Create an instance of WorkoutDao to access custom workout data from the SQLite database
+        WorkoutDao workoutDao = new WorkoutDao(getContext());
+        // Fetch the list of custom workouts
+        List<WorkoutRoutine> customRoutines = workoutDao.getCustomWorkouts(); // Implement getCustomWorkouts method in WorkoutDao
+
+        WorkoutAdapter adapter = new WorkoutAdapter(customRoutines);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+    }
+
+
+
 
     /**
      * Displays the 'EXPLORE' section content.
+     * This involves inflating a layout that contains a RecyclerView for displaying workout routines.
      */
     private void displayExploreContent() {
         // Inflate and display the explore layout
         @SuppressLint("InflateParams") View exploreView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_workout_explore, null);
-        // Clear any existing views in the container
+        // Clear any existing views in the content frame
         contentFrame.removeAllViews();
-        // Add the explore view to the container
+        // Add the explore view to the content frame
         contentFrame.addView(exploreView);
-        // Initialize the RecyclerView within the explore view
+        // Setup the RecyclerView for displaying workouts
         setupExploreRecyclerView(exploreView);
     }
 
     /**
-     * Returns a list of WorkoutRoutine objects parsed from the JSON file.
-     */
-    private List<WorkoutRoutine> getWorkoutRoutines() {
-        // Load JSON data from the assets folder
-        String json = loadJSONFromAsset("workouts.json");
-        // Parse the JSON data into WorkoutRoutine objects
-        return parseWorkouts(json);
-    }
-
-    /**
-     * Loads JSON data from the specified assets file.
-     */
-    private String loadJSONFromAsset(String filename) {
-        try (InputStream is = requireActivity().getAssets().open(filename)) {
-            // Read the input stream into a byte array
-            byte[] buffer = new byte[is.available()];
-            is.read(buffer);
-            // Convert byte array into a string
-            return new String(buffer, StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            // Log and handle the exception
-            ex.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Parses the JSON data into a list of WorkoutRoutine objects.
-     */
-    private List<WorkoutRoutine> parseWorkouts(String json) {
-        // Return an empty list if JSON data is null
-        if (json == null) {
-            return new ArrayList<>();
-        }
-        List<WorkoutRoutine> workoutList = new ArrayList<>();
-        try {
-            // Parse the JSON array
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                // Parse each JSON object into a WorkoutRoutine
-                JSONObject jsonObject = array.getJSONObject(i);
-                workoutList.add(new WorkoutRoutine(
-                        jsonObject.getString("title"),
-                        jsonObject.getString("rating"),
-                        jsonObject.getString("duration")
-                ));
-            }
-        } catch (JSONException e) {
-            // Log and handle the exception
-            e.printStackTrace();
-        }
-        return workoutList;
-    }
-
-    /**
-     * Sets up the RecyclerView in the 'EXPLORE' section.
+     * Sets up the RecyclerView used in the 'EXPLORE' section.
+     * This includes configuring the adapter and layout manager.
+     * @param exploreView The view containing the RecyclerView.
      */
     private void setupExploreRecyclerView(View exploreView) {
-        // Find the RecyclerView and bind it to the adapter
         RecyclerView recyclerView = exploreView.findViewById(R.id.rvWorkoutExplore);
-        List<WorkoutRoutine> routines = getWorkoutRoutines();
-        recyclerView.setAdapter(new WorkoutAdapter(routines));
-        // Set a LinearLayoutManager to the RecyclerView
+
+        // Create an instance of WorkoutDao to access workout data from the SQLite database
+        WorkoutDao workoutDao = new WorkoutDao(getContext());
+        // Fetch the list of workouts
+        List<WorkoutRoutine> routines = workoutDao.getExploreWorkouts();
+
+        // Create and set an adapter with the fetched workout routines
+        WorkoutAdapter adapter = new WorkoutAdapter(routines);
+        recyclerView.setAdapter(adapter);
+        // Set a LinearLayoutManager for the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
     }
 }

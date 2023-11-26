@@ -4,15 +4,16 @@ public class WorkoutRoutine {
     private String title;
     private String rating;
     private String duration;
+    private String type;
 
-    // Constructor
-    public WorkoutRoutine(String title, String rating, String duration) {
+    public WorkoutRoutine(String title, String rating, String duration, String type) {
         this.title = title;
         this.rating = rating;
         this.duration = duration;
+        this.type = type;
     }
 
-    // Getters and Setters
+
     public String getTitle() {
         return title;
     }
@@ -35,5 +36,13 @@ public class WorkoutRoutine {
 
     public void setDuration(String duration) {
         this.duration = duration;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
